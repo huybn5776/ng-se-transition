@@ -1,0 +1,25 @@
+/* Add application styles & imports to this file! */
+body {
+  font-family: Roboto, serif;
+  padding: 0;
+  margin: 0;
+}
+
+button {
+  font-size: 16px;
+  background-color: transparent;
+  text-transform: uppercase;
+  border: 1px solid black;
+  padding: 2px 4px;
+  margin: 8px;
+  transition: .2s;
+}
+
+button:hover {
+  background-color: black;
+  color: white;
+}
+
+button:focus {
+  outline: none;
+}

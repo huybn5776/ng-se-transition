@@ -1,0 +1,20 @@
+<div class="container">
+  <div class="card" *ngFor="let car of cars; let i=index">
+    <h4>
+      {{ car.name }}
+    </h4>
+    <div class="listing" *ngIf="inlineIndex !== i">
+      <img [src]="car.image" #img=seTrans seTrans="car-photo" (click)="inlineDetails(i)">
+      <div class="price">€ {{ car.price }}K</div>
+      <button (click)="moreDetails(car.id)">More details</button>
+      <button (click)="inlineDetails(i)">Inline</button>
+    </div>
+
+    <div class="inline-detail" *ngIf="inlineIndex == i">
+      <p (click)="closeInline()">{{car.description}}</p>
+      <img [src]="car.image" #imgInline=seTrans seTrans="car-photo">
+      <button (click)="closeInline()">Close inline</button>
+    </div>
+
+  </div>
+</div>
