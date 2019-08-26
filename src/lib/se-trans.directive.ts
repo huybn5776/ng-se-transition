@@ -13,8 +13,8 @@ import { SeTransState } from "./se-trans-state";
 export class SeTransDirective implements AfterViewInit, OnDestroy {
 
   @Input() seTrans: string;
-  @Input() seTransContainer: HTMLElement;
   @Input() seTransTime: number;
+  @Input() seContainer: HTMLElement;
   @Input() seScrollContent: HTMLElement = document.body;
 
   @Output() seTransStart = new EventEmitter<{ from: SeRect, to: SeRect }>();
@@ -43,7 +43,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   }
 
   get containerElement(): HTMLElement {
-    return this.seTransContainer || this.element.parentElement;
+    return this.seContainer || this.element.parentElement;
   }
 
   constructor(
