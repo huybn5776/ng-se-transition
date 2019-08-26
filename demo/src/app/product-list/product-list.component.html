@@ -6,7 +6,7 @@
     <div class="listing" *ngIf="inlineIndex !== i">
       <img [src]="car.image" #img=seTrans seTrans="car-photo" (click)="inlineDetails(i)">
       <div class="price">€ {{ car.price }}K</div>
-      <button (click)="moreDetails(car.id)">More details</button>
+      <button [routerLink]="['detail', car.id]">More details</button>
       <button (click)="inlineDetails(i)">Inline</button>
     </div>
 

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import carsData from '../cars';
 import { Router } from '@angular/router';
 
+import carsData from '../cars';
 import { SeTransService } from "../../../../src/lib/se-trans.service";
 
 @Component({
@@ -19,10 +19,6 @@ export class ProductListComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-  }
-
-  moreDetails(carId: number) {
-    this.router.navigate(['product-detail', carId]);
   }
 
   inlineDetails(index: number) {
