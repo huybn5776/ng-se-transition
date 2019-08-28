@@ -33,12 +33,12 @@ export class PhotoGalleryComponent implements OnInit {
 
   onPhotoClick(url: string) {
     this.selectedPhoto = url;
-    this.seTransService.beforeChange();
+    this.seTransService.registerAllTransition();
   }
 
   exitFullscreen() {
     this.selectedPhoto = null;
-    this.seTransService.beforeChange();
+    this.seTransService.registerAllTransition();
   }
 
   applyCoverSize(element: HTMLElement, containerEl: HTMLElement) {

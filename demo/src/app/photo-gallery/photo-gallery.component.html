@@ -1,12 +1,12 @@
 <div class="container" #container>
   <div class="gallery-container">
     <div class="photo-thumbnail" *ngFor="let url of photos" #containerEl>
-      <img *ngIf="selectedPhoto!==url"
-           [src]="url"
+      <img [src]="url"
            (click)="onPhotoClick(url)"
            seTrans="gallery"
            [seContainer]="container" appLifecycleHook
-           [seTransTime]="300"
+           [seTime]="300"
+           [seAutoRegister]="true"
            (afterViewInit)="applyCoverSize($event, containerEl)"
       >
     </div>
@@ -15,7 +15,8 @@
   <div class="fullscreen-container" *ngIf="selectedPhoto" (click)="exitFullscreen()">
     <img [src]="selectedPhoto"
          seTrans="gallery"
-         [seTransTime]="300"
+         [seTime]="300"
+         [seAutoRegister]="true"
          [seScrollContent]="container"
     >
   </div>

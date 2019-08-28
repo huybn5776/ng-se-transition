@@ -22,12 +22,12 @@ export class ProductListComponent implements OnInit {
   }
 
   inlineDetails(index: number) {
-    this.seTransService.beforeChange();
+    this.seTransService.registerAllTransition();
     this.inlineIndex = index;
   }
 
   closeInline() {
-    this.seTransService.beforeChange();
+    this.seTransService.registerAllTransition();
     this.inlineIndex = -1;
   }
 }

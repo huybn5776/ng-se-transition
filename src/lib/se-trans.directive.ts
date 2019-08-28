@@ -1,21 +1,25 @@
 import { AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
-import { fromEvent, Subscription } from "rxjs";
-import { first, map } from "rxjs/operators";
+import { fromEvent, Observable, Subscription } from 'rxjs';
+import { first, map } from 'rxjs/operators';
 
-import { SeTransService } from "./se-trans.service";
-import { SeRect } from "./se-rect";
-import { SeTransState } from "./se-trans-state";
+import { SeTransService } from './se-trans.service';
+import { SeRect } from './se-rect';
+import { SeTransState } from './se-trans-state';
 
 @Directive({
   selector: '[seTrans]',
-  exportAs: 'seTrans'
+  exportAs: 'seTrans',
 })
 export class SeTransDirective implements AfterViewInit, OnDestroy {
 
   @Input() seTrans: string;
-  @Input() seTransTime: number;
+  @Input() seTime: number;
   @Input() seContainer: HTMLElement;
   @Input() seScrollContent: HTMLElement = document.body;
+  @Input() seSourceYOffset = 0;
+  @Input() seTargetYOffset: any = 0;
+  @Input() seTransitionOn: Observable<any>;
+  @Input() seAutoRegister = false;
 
   @Output() seTransStart = new EventEmitter<{ from: SeRect, to: SeRect }>();
   @Output() seTransEnd = new EventEmitter<TransitionEvent>();
@@ -29,6 +33,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   }
 
   state: SeTransState = SeTransState.None;
+  transitionEnabled = false;
   lastCloneElement: HTMLElement;
   transitionEndSubscription: Subscription;
   lastRect: SeRect;
@@ -50,10 +55,10 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     private readonly seTransService: SeTransService,
     private readonly elementRef: ElementRef,
   ) {
-    this.seTransTime = this.seTransTime || seTransService.getConfig().transTime;
+    this.seTime = this.seTime || seTransService.getConfig().transTime;
   }
 
-  async ngAfterViewInit() {
+  ngAfterViewInit() {
     this.seTransService.onDirectiveInit(this);
   }
 
@@ -62,7 +67,6 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     if (this.transitionEndSubscription) {
       this.transitionEndSubscription.unsubscribe();
     }
-    this.seTransService.unregisterTransitionSource(this);
   }
 
   public async doTransition(sourceRect: SeRect, time: number = 0) {
@@ -70,16 +74,15 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     const scrollTop = this.leaveScrollTop || this.getScrollTop();
 
     const clone = this.createClone(time);
-    this.element.style.visibility = 'hidden';
-    sourceRect.top += scrollTop;
+    this.hideElement();
+    sourceRect.top += scrollTop + this.seSourceYOffset;
     this.setPlace(clone, sourceRect);
     await this.waitAwhile();
 
     this.state = SeTransState.Transitioning;
     const rect = this.getBoundingRect(this.element);
-    rect.top += this.getScrollTop();
+    rect.top += this.getScrollTop() + parseInt(this.seTargetYOffset, 10);
     this.seTransStart.emit({from: sourceRect, to: rect});
-
     this.setPlace(clone, rect);
     this.removeOnTransitionEnd(clone);
     this.lastTransitioningStartTime = new Date().getTime();
@@ -91,20 +94,10 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
       this.getBoundingRect(this.element);
   }
 
-  private getBoundingRect(element: HTMLElement) {
-    const boundingRect = element.getBoundingClientRect();
-    const rect: SeRect = {
-      left: boundingRect.left,
-      top: boundingRect.top,
-      width: boundingRect.width,
-      height: boundingRect.height,
-    };
-    this.lastRect = rect;
-    return rect;
-  }
-
-  getScrollTop() {
-    return this.seScrollContent == null ? 0 : this.seScrollContent.scrollTop;
+  public updateInfo() {
+    this.updateLastRect();
+    this.updateLastTransitioningRect();
+    this.updateLeaveScrollTop();
   }
 
   public updateLastRect() {
@@ -121,6 +114,18 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     this.leaveScrollTop = this.getScrollTop();
   }
 
+  public hideElement() {
+    this.element.style.visibility = 'hidden';
+  }
+
+  public showElement() {
+    this.element.style.visibility = 'visible';
+  }
+
+  public getScrollTop() {
+    return this.seScrollContent == null ? 0 : this.seScrollContent.scrollTop;
+  }
+
   waitAwhile(timeout = 0): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, timeout));
   }
@@ -128,8 +133,10 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   createClone(transitionTime: number): HTMLElement {
     this.stopLastTransition();
     const clone: HTMLElement = this.element.cloneNode() as any;
+    clone.style.visibility = clone.style.visibility === 'hidden' ? '' : clone.style.visibility;
     clone.style.position = 'absolute';
-    clone.style.transition = `all ${transitionTime || this.seTransTime}ms`;
+    clone.style.transition = `all ${transitionTime || this.seTime}ms`;
+    clone.style.zIndex = this.seTransService.getConfig().transZIndex + '';
     clone.classList.add('transition-clone');
     this.containerElement.append(clone);
     this.lastCloneElement = clone;
@@ -137,11 +144,14 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   }
 
   setPlace(element: HTMLElement, rect: SeRect) {
-    Object.assign(element.style, rect);
+    element.style.top = rect.top + 'px';
+    element.style.left = rect.left + 'px';
+    element.style.width = rect.width + 'px';
+    element.style.height = rect.height + 'px';
   }
 
   removeOnTransitionEnd(element: HTMLElement): Promise<boolean> {
-    const subject = fromEvent(element, "transitionend")
+    const subject = fromEvent(element, 'transitionend')
       .pipe(first());
     this.transitionEndSubscription =
       subject.subscribe((event: TransitionEvent) => {
@@ -172,9 +182,22 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   }
 
   removeCloneAndShowSource(clone: HTMLElement) {
-    this.element.style.visibility = '';
+    this.showElement();
     this.containerElement.removeChild(clone);
     this.lastCloneElement = null;
     this.state = SeTransState.None;
+    this.transitionEnabled = false;
+  }
+
+  private getBoundingRect(element: HTMLElement) {
+    const boundingRect = element.getBoundingClientRect();
+    const rect: SeRect = {
+      left: boundingRect.left,
+      top: boundingRect.top,
+      width: boundingRect.width,
+      height: boundingRect.height,
+    };
+    this.lastRect = rect;
+    return rect;
   }
 }

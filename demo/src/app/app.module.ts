@@ -8,10 +8,11 @@ import { RoutingModule } from './routing/routing.module';
 import { HomeComponent } from './home/home.component';
 import { ProductListComponent } from './product-list/product-list.component';
 import { ProductDetailsComponent } from './product-details/product-details.component';
-import { SeTransDirective } from "../../../src/lib/se-trans.directive";
-import { SeTransConfig, SeTransService } from "../../../src/lib/se-trans.service";
+import {  SeTransService } from "../../../src/lib/se-trans.service";
 import { PhotoGalleryComponent } from "./photo-gallery/photo-gallery.component";
 import { LifecycleHookDirective } from "./directives/lifecycle-hook.directive";
+import { SeTransModule } from "../../../src/lib/se-trans.module";
+import { SeTransConfig } from "../../../src/lib/se-trans-config";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -19,7 +20,8 @@ import { LifecycleHookDirective } from "./directives/lifecycle-hook.directive";
     BrowserModule,
     FormsModule,
     BrowserAnimationsModule,
-    RoutingModule
+    RoutingModule,
+    SeTransModule,
   ],
   declarations: [
     AppComponent,
@@ -28,7 +30,6 @@ import { LifecycleHookDirective } from "./directives/lifecycle-hook.directive";
     ProductDetailsComponent,
     PhotoGalleryComponent,
     LifecycleHookDirective,
-    SeTransDirective,
   ],
   bootstrap: [AppComponent],
   providers: [
