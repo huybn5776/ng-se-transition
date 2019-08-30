@@ -5,6 +5,7 @@ import { first, map } from 'rxjs/operators';
 import { SeTransService } from './se-trans.service';
 import { SeRect } from './se-rect';
 import { SeTransState } from './se-trans-state';
+import { TransitionOption } from './se-trans.option';
 
 @Directive({
   selector: '[seTrans]',
@@ -21,7 +22,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   @Input() seTransitionOn: Observable<any>;
   @Input() seAutoRegister = false;
 
-  @Output() seTransStart = new EventEmitter<{ from: SeRect, to: SeRect }>();
+  @Output() seTransStart = new EventEmitter<TransitionOption>();
   @Output() seTransEnd = new EventEmitter<TransitionEvent>();
 
   get identifier() {
@@ -69,21 +70,23 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     }
   }
 
-  public async doTransition(sourceRect: SeRect, time: number = 0) {
+  public async doTransition(opt: TransitionOption) {
     this.state = SeTransState.AboutToTransition;
     const scrollTop = this.leaveScrollTop || this.getScrollTop();
+    const fromRect = Object.assign({}, opt.from);
+    const transitionTime = opt.time || this.seTime;
 
-    const clone = this.createClone(time);
+    const clone = this.createClone(transitionTime);
     this.hideElement();
-    sourceRect.top += scrollTop + this.seSourceYOffset;
-    this.setPlace(clone, sourceRect);
+    fromRect.top += scrollTop + this.seSourceYOffset;
+    this.setPlace(clone, fromRect);
     await this.waitAwhile();
 
     this.state = SeTransState.Transitioning;
-    const rect = this.getBoundingRect(this.element);
-    rect.top += this.getScrollTop() + parseInt(this.seTargetYOffset, 10);
-    this.seTransStart.emit({from: sourceRect, to: rect});
-    this.setPlace(clone, rect);
+    const toRect = opt.to ? Object.assign({}, opt.to) : this.getBoundingRect(this.element);
+    toRect.top += this.getScrollTop() + parseInt(this.seTargetYOffset, 10);
+    this.setPlace(clone, toRect);
+    this.seTransStart.emit({from: fromRect, to: toRect, time: transitionTime});
     this.removeOnTransitionEnd(clone);
     this.lastTransitioningStartTime = new Date().getTime();
   }
@@ -135,7 +138,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     const clone: HTMLElement = this.element.cloneNode() as any;
     clone.style.visibility = clone.style.visibility === 'hidden' ? '' : clone.style.visibility;
     clone.style.position = 'absolute';
-    clone.style.transition = `all ${transitionTime || this.seTime}ms`;
+    clone.style.transition = `all ${transitionTime}ms`;
     clone.style.zIndex = this.seTransService.getConfig().transZIndex + '';
     clone.classList.add('transition-clone');
     this.containerElement.append(clone);

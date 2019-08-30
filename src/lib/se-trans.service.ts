@@ -91,7 +91,7 @@ export class SeTransService {
         .filter(dir => dir.state !== SeTransState.AboutToTransition &&
           dir !== directive && dir.identifier === directive.identifier && dir.src === directive.src)[0];
       if (targetDir) {
-        targetDir.doTransition(directive.lastRect);
+        targetDir.doTransition({from: directive.lastRect});
       }
     }
     // Do in next frame.
@@ -113,7 +113,7 @@ export class SeTransService {
       return;
     }
     const timeSpanFromLast = new Date().getTime() - sourceDir.lastTransitioningStartTime;
-    targetDir.doTransition(rect, Math.min(targetDir.seTime, timeSpanFromLast));
+    targetDir.doTransition({from: rect, time: Math.min(targetDir.seTime, timeSpanFromLast)});
     sourceDir.state = SeTransState.None;
   }
 
@@ -123,6 +123,7 @@ export class SeTransService {
 }
 
 // take it if you want
+// noinspection JSUnusedLocalSymbols
 function n<T>(someObject: T, defaultValue: T = {} as T): T {
   return typeof someObject === 'undefined' || someObject === null ? defaultValue : someObject;
 }
