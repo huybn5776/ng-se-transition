@@ -5,7 +5,7 @@ import { first, map } from 'rxjs/operators';
 import { SeTransService } from './se-trans.service';
 import { SeRect } from './se-rect';
 import { SeTransState } from './se-trans-state';
-import { TransitionOption } from './se-trans.option';
+import { SeTransitionOption } from './se-trans.option';
 
 @Directive({
   selector: '[seTrans]',
@@ -22,7 +22,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   @Input() seTransitionOn: Observable<any>;
   @Input() seAutoRegister = false;
 
-  @Output() seTransStart = new EventEmitter<TransitionOption>();
+  @Output() seTransStart = new EventEmitter<SeTransitionOption>();
   @Output() seTransEnd = new EventEmitter<TransitionEvent>();
 
   get identifier() {
@@ -70,7 +70,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     }
   }
 
-  public async doTransition(opt: TransitionOption) {
+  public async doTransition(opt: SeTransitionOption): Promise<any> {
     this.state = SeTransState.AboutToTransition;
     const scrollTop = this.leaveScrollTop || this.getScrollTop();
     const fromRect = Object.assign({}, opt.from);
