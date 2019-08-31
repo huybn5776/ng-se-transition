@@ -40,6 +40,28 @@ export class SeTransService {
     this.activeDirectives.forEach(directive => this.registerTransition(directive));
   }
 
+  public runBackTransitionOf(identifier: string, src: string) {
+    const directive = this.activeDirectives
+      .filter(dir => dir.identifier === identifier && dir.src === src)
+      .sort((d1, d2) => d2.lastTransitionTime - d1.lastTransitionTime)[0];
+    if (!directive) {
+      return;
+    }
+    this.runBackTransition(directive);
+  }
+
+  public runBackTransition(directive: SeTransDirective) {
+    const fromRect = directive.getRect();
+    const lastDirective = this.activeDirectives
+      .filter(dir => dir !== directive && dir.identifier === directive.identifier && dir.src === directive.src)
+      .sort((d1, d2) => d2.lastTransitionTime - d1.lastTransitionTime)[0];
+    const toRect = lastDirective.getRect() || directive.lastTransitionFrom;
+    lastDirective.hideElement();
+    directive.doTransition({from: fromRect, to: toRect, keepState: true})
+      .then(() => lastDirective.showElement());
+    directive.lastTransitionFrom = toRect;
+  }
+
   registerTransition(directive: SeTransDirective, weight = null) {
     directive.weight = weight == null ? directive.weight : weight;
     directive.transitionEnabled = true;
@@ -81,8 +103,10 @@ export class SeTransService {
       await targetDir.seTransitionOn.pipe(first()).toPromise();
     }
     const rect = sourceDir.lastTransitioningRect || sourceDir.lastRect;
-    this.transitionDirective(sourceDir, targetDir, rect);
     sourceDir.transitionEnabled = false;
+    sourceDir.hideElement();
+    this.transitionDirective(sourceDir, targetDir, rect)
+      .then(() => sourceDir.showElement());
   }
 
   onDirectiveDestroy(directive: SeTransDirective) {
@@ -108,13 +132,13 @@ export class SeTransService {
       .sort((d1, d2) => d2.weight - d1.weight)[0];
   }
 
-  transitionDirective(sourceDir: SeTransDirective, targetDir: SeTransDirective, rect: SeRect) {
+  transitionDirective(sourceDir: SeTransDirective, targetDir: SeTransDirective, rect: SeRect): Promise<void> {
     if (!rect) {
       return;
     }
     const timeSpanFromLast = new Date().getTime() - sourceDir.lastTransitioningStartTime;
-    targetDir.doTransition({from: rect, time: Math.min(targetDir.seTime, timeSpanFromLast)});
     sourceDir.state = SeTransState.None;
+    return targetDir.doTransition({from: rect, time: Math.min(targetDir.seTime, timeSpanFromLast)});
   }
 
   getConfig(): SeTransConfig {

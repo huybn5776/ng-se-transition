@@ -23,7 +23,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   @Input() seAutoRegister = false;
 
   @Output() seTransStart = new EventEmitter<SeTransitionOption>();
-  @Output() seTransEnd = new EventEmitter<TransitionEvent>();
+  @Output() seTransEnd = new EventEmitter<SeTransitionOption>();
 
   get identifier() {
     return this.seTrans;
@@ -40,6 +40,8 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   lastRect: SeRect;
   lastTransitioningRect: SeRect;
   lastTransitioningStartTime = 0;
+  lastTransitionTime = 0;
+  lastTransitionFrom: SeRect;
   url: string;
   weight = 0;
   leaveScrollTop = 0;
@@ -80,15 +82,26 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     this.hideElement();
     fromRect.top += scrollTop + this.seSourceYOffset;
     this.setPlace(clone, fromRect);
+    this.lastTransitionFrom = fromRect;
     await this.waitAwhile();
 
     this.state = SeTransState.Transitioning;
+    this.lastTransitionTime = new Date().getTime();
     const toRect = opt.to ? Object.assign({}, opt.to) : this.getBoundingRect(this.element);
     toRect.top += this.getScrollTop() + parseInt(this.seTargetYOffset, 10);
     this.setPlace(clone, toRect);
     this.seTransStart.emit({from: fromRect, to: toRect, time: transitionTime});
-    this.removeOnTransitionEnd(clone);
     this.lastTransitioningStartTime = new Date().getTime();
+
+    await this.getTransitionEndPromise(clone);
+    if (!opt.keepState) {
+      this.removeCloneAndShowSource(clone);
+      this.lastCloneElement = null;
+      this.lastTransitioningRect = null;
+      this.lastTransitioningStartTime = 0;
+      this.seTransEnd.emit(opt);
+    }
+    return Promise.resolve();
   }
 
   public getRect(): SeRect {
@@ -153,23 +166,17 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
     element.style.height = rect.height + 'px';
   }
 
-  removeOnTransitionEnd(element: HTMLElement): Promise<boolean> {
-    const subject = fromEvent(element, 'transitionend')
-      .pipe(first());
-    this.transitionEndSubscription =
-      subject.subscribe((event: TransitionEvent) => {
-        this.removeCloneAndShowSource(element);
-        this.lastCloneElement = null;
-        this.lastTransitioningRect = null;
-        this.lastTransitioningStartTime = 0;
-        this.seTransEnd.emit(event);
-      });
-    return subject.pipe(map(() => true)).toPromise();
+  getTransitionEndPromise(element: HTMLElement): Promise<void> {
+    return fromEvent(element, 'transitionend')
+      .pipe(first(), map(() => null))
+      .toPromise();
   }
 
   stopLastTransition() {
-    if (this.lastCloneElement) {
+    if (this.state === SeTransState.Transitioning) {
       this.updateLastTransitioningRect();
+    }
+    if (this.lastCloneElement) {
       this.removeCloneAndShowSource(this.lastCloneElement);
     }
   }
