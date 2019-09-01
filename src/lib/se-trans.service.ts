@@ -54,7 +54,7 @@ export class SeTransService {
     const fromRect = directive.getRect();
     const lastDirective = this.activeDirectives
       .filter(dir => dir !== directive && dir.identifier === directive.identifier && dir.src === directive.src)
-      .sort((d1, d2) => d2.lastTransitionTime - d1.lastTransitionTime)[0];
+      .sort((d1, d2) => d2.weight - d1.weight || d2.lastTransitionTime - d1.lastTransitionTime)[0];
     const toRect = lastDirective.getRect() || directive.lastTransitionFrom;
     lastDirective.hideElement();
     directive.doTransition({from: fromRect, to: toRect, keepState: true})
