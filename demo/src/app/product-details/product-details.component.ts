@@ -1,9 +1,8 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 import carsData from '../cars';
-import { SeTransDirective } from "../../../../src/lib/se-trans.directive";
 
 @Component({
   selector: 'app-product-details',
@@ -11,9 +10,6 @@ import { SeTransDirective } from "../../../../src/lib/se-trans.directive";
   styleUrls: ['./product-details.component.scss']
 })
 export class ProductDetailsComponent {
-
-  @ViewChild('carPhoto', {static: true}) carPhoto: ElementRef;
-  @ViewChild(SeTransDirective, {static: true}) seTransDirective: SeTransDirective;
 
   get car() {
     return carsData

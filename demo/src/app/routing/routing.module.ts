@@ -1,11 +1,11 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes, RouteReuseStrategy } from '@angular/router';
 
-import { HomeComponent } from "../home/home.component";
+import { HomeComponent } from '../home/home.component';
 import { ProductListComponent } from '../product-list/product-list.component';
 import { ProductDetailsComponent } from '../product-details/product-details.component';
 import { CustomRouteReuseStrategy } from './re-use-strategy';
-import { PhotoGalleryComponent } from "../photo-gallery/photo-gallery.component";
+import { PhotoGalleryComponent } from '../photo-gallery/photo-gallery.component';
 
 const appRoutes: Routes = [
   {
