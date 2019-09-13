@@ -37,7 +37,8 @@ export class SeTransService {
   }
 
   public registerAllTransition() {
-    this.activeDirectives.forEach(directive => this.registerTransition(directive));
+    this.activeDirectives
+      .forEach(directive => this.registerTransition(directive));
   }
 
   public runBackTransitionOf(identifier: string, src: string) {
@@ -72,7 +73,9 @@ export class SeTransService {
     if (event.navigationTrigger === 'popstate') {
       this.transitionPrevPage(event.url);
     }
-    this.registerAllTransition();
+    this.activeDirectives
+      .filter(dir => dir.seRouteAnim)
+      .forEach(directive => this.registerTransition(directive));
     this.activeDirectives
       .filter(dir => dir.state === SeTransState.Transitioning)
       .forEach(directive => directive.stopLastTransition());
@@ -80,6 +83,7 @@ export class SeTransService {
 
   transitionPrevPage(url: string) {
     this.activeDirectives
+      .filter(dir => dir.seRouteAnim)
       .filter(dir => dir.url === this.router.url)
       .forEach(sourceDir => {
         const targetDir = this.getLastTransitionDirective(sourceDir, url);

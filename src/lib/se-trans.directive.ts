@@ -19,6 +19,7 @@ export class SeTransDirective implements AfterViewInit, OnDestroy {
   @Input() seScrollContent: HTMLElement = document.body;
   @Input() seSourceYOffset = 0;
   @Input() seTargetYOffset: any = 0;
+  @Input() seRouteAnim = false;
   @Input() seTransitionOn: Observable<any>;
   @Input() seAutoRegister = false;
 

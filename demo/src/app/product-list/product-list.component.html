@@ -4,7 +4,7 @@
       {{ car.name }}
     </h4>
     <div class="listing" *ngIf="inlineIndex !== i">
-      <img [src]="car.image" seTrans="car-photo" (click)="inlineDetails(i)">
+      <img [src]="car.image" seTrans="car-photo" (click)="inlineDetails(i)" [seRouteAnim]="false">
       <div class="price">€ {{ car.price }}K</div>
       <button [routerLink]="['detail', car.id]">More details</button>
       <button (click)="inlineDetails(i)">Inline</button>
